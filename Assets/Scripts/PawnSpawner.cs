@@ -1,5 +1,8 @@
 ﻿using System;
+
 using UnityEngine;
+
+using Random = System.Random;
 
 namespace CrazyPawn
 {
@@ -10,7 +13,7 @@ namespace CrazyPawn
     {
         private readonly SettingsProvider _settingsProvider;
         private readonly Func<Vector3, PawnView> _pawnFactory;
-        private readonly System.Random _random;
+        private readonly Random _random;
 
         public PawnSpawner(
             SettingsProvider settingsProvider,
@@ -19,7 +22,7 @@ namespace CrazyPawn
         {
             _settingsProvider = settingsProvider ?? throw new ArgumentNullException(nameof(settingsProvider));
             _pawnFactory = pawnFactory ?? throw new ArgumentNullException(nameof(pawnFactory));
-            _random = seed.HasValue ? new System.Random(seed.Value) : new System.Random();
+            _random = seed.HasValue ? new Random(seed.Value) : new Random();
         }
 
         /// <summary>
@@ -27,12 +30,12 @@ namespace CrazyPawn
         /// </summary>
         public void SpawnInitialPawns()
         {
-            int count = _settingsProvider.InitialPawnCount;
-            float radius = _settingsProvider.InitialZoneRadius;
+            var count = _settingsProvider.InitialPawnCount;
+            var radius = _settingsProvider.InitialZoneRadius;
 
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
-                Vector3 position = GetRandomPositionInCircle(radius);
+                var position = GetRandomPositionInCircle(radius);
                 _pawnFactory(position);
             }
         }
@@ -40,11 +43,11 @@ namespace CrazyPawn
         private Vector3 GetRandomPositionInCircle(float radius)
         {
             // Равномерное распределение по площади круга
-            double angle = _random.NextDouble() * Math.PI * 2.0;
-            double distance = Math.Sqrt(_random.NextDouble()) * radius;
+            var angle = _random.NextDouble() * Math.PI * 2.0;
+            var distance = Math.Sqrt(_random.NextDouble()) * radius;
 
-            float x = (float)(Math.Cos(angle) * distance);
-            float z = (float)(Math.Sin(angle) * distance);
+            var x = (float) (Math.Cos(angle) * distance);
+            var z = (float) (Math.Sin(angle) * distance);
 
             return new Vector3(x, 0f, z);
         }

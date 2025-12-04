@@ -5,7 +5,7 @@ namespace CrazyPawn
 {
     /// <summary>
     /// Управляет коннекторами и (в будущем) соединениями между ними.
-    /// Сейчас умеет только регистрировать коннекторы.
+    /// Сейчас умеет только регистрировать коннекторы и содержит заглушки под будущую логику.
     /// </summary>
     public sealed class ConnectionManager
     {
@@ -16,6 +16,7 @@ namespace CrazyPawn
         public void RegisterConnector(ConnectorController connector)
         {
             if (connector == null) throw new ArgumentNullException(nameof(connector));
+
             if (!_connectors.Contains(connector))
             {
                 _connectors.Add(connector);
@@ -35,6 +36,11 @@ namespace CrazyPawn
         public void OnConnectorDragEnd(ConnectorController connectorOrNull)
         {
             // Реальная логика появится на этапе 6.
+        }
+
+        public void RemoveConnectionsForPawn(PawnController pawn)
+        {
+            // Реальная логика удаления всех линий для фигуры будет на этапе 7.
         }
     }
 }

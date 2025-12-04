@@ -4,7 +4,7 @@ namespace CrazyPawn
 {
     /// <summary>
     /// Корневой компонент сцены.
-    /// Инициализирует настройки, границы доски, менеджер соединений и спавнит фигуры.
+    /// Инициализирует настройки, границы доски, менеджер соединений и фигуры.
     /// </summary>
     public sealed class GameEntryPoint : MonoBehaviour
     {
@@ -44,23 +44,25 @@ namespace CrazyPawn
                 _pawnsRoot = transform;
             }
 
-            // Этап 1 — из прошлой части:
+            // Инфраструктура
             SettingsProvider = new SettingsProvider(_settings);
             BoardBounds = new BoardBounds(SettingsProvider);
 
-            // Этап 2:
+            // Менеджер соединений (логика появится на этапах 4–6)
             ConnectionManager = new ConnectionManager();
-            _pawnSpawner = new PawnSpawner(SettingsProvider, CreatePawnAt);
 
+            // Спавнер фигур
+            _pawnSpawner = new PawnSpawner(SettingsProvider, CreatePawnAt);
             _pawnSpawner.SpawnInitialPawns();
         }
 
         /// <summary>
-        /// Фабрика для PawnSpawner: инстанцирует префаб, создаёт контроллер и коннекторы.
+        /// Фабрика для PawnSpawner: инстанцирует префаб, создаёт контроллеры и навешивает обработчики.
         /// </summary>
         private PawnView CreatePawnAt(Vector3 position)
         {
             var pawnInstance = Instantiate(_pawnPrefab, position, Quaternion.identity, _pawnsRoot);
+
             if (pawnInstance == null)
             {
                 Debug.LogError("[GameEntryPoint] Pawn prefab instance does not contain PawnView component.", this);
@@ -69,34 +71,69 @@ namespace CrazyPawn
 
             // Контроллер фигуры
             var pawnController = new PawnController(pawnInstance);
-            pawnInstance.Initialize(pawnController);
+
+            // Инициализация вью: материалы и ссылки
+            pawnInstance.Initialize(pawnController, SettingsProvider.DeleteMaterial);
+            pawnInstance.DeleteRequested += OnPawnDeleteRequested;
 
             // Коннекторы
             var connectorViews = pawnInstance.ConnectorViews;
+
             if (connectorViews == null || connectorViews.Count == 0)
             {
                 Debug.LogWarning("[GameEntryPoint] PawnView has no ConnectorViews assigned or found.", pawnInstance);
-                return pawnInstance;
+            }
+            else
+            {
+                foreach (var connectorView in connectorViews)
+                {
+                    if (connectorView == null)
+                        continue;
+
+                    var connectorController = new ConnectorController(pawnController, connectorView, ConnectionManager);
+                    connectorView.Initialize(connectorController);
+
+                    pawnController.AddConnector(connectorController);
+                    ConnectionManager.RegisterConnector(connectorController);
+                }
             }
 
-            foreach (var connectorView in connectorViews)
+            // Drag по телу фигуры
+            var dragHandler = pawnInstance.GetComponentInChildren<PawnDragHandler>(true);
+
+            if (dragHandler != null)
             {
-                if (connectorView == null)
-                    continue;
-
-                var connectorController = new ConnectorController(pawnController, connectorView, ConnectionManager);
-                connectorView.Initialize(connectorController);
-
-                pawnController.AddConnector(connectorController);
-                ConnectionManager.RegisterConnector(connectorController);
+                dragHandler.Initialize(BoardBounds);
+            }
+            else
+            {
+                Debug.LogWarning("[GameEntryPoint] Pawn prefab has no PawnDragHandler attached.", pawnInstance);
             }
 
             return pawnInstance;
         }
 
+        /// <summary>
+        /// Обработка запроса удаления фигуры (при отпускании мыши вне доски).
+        /// </summary>
+        private void OnPawnDeleteRequested(PawnController pawn)
+        {
+            if (pawn == null)
+                return;
+
+            // Очистка соединений для этой фигуры (реальная логика будет позже, на этапе 7).
+            ConnectionManager.RemoveConnectionsForPawn(pawn);
+
+            if (pawn.View != null)
+            {
+                Destroy(pawn.View.gameObject);
+            }
+        }
+
         private void Update()
         {
-            // На этапах 5–6 здесь появится вызов ConnectionManager.Tick().
+            // На следующих этапах здесь будет, например:
+            // ConnectionManager.Tick();
         }
     }
 }

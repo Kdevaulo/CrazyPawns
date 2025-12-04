@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using UnityEngine;
 
 namespace CrazyPawn
@@ -29,6 +30,7 @@ namespace CrazyPawn
         public void AddConnector(ConnectorController connector)
         {
             if (connector == null) throw new ArgumentNullException(nameof(connector));
+
             if (!_connectors.Contains(connector))
             {
                 _connectors.Add(connector);
