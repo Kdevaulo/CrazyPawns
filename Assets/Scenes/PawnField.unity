@@ -155,6 +155,8 @@ MonoBehaviour:
   _settings: {fileID: 11400000, guid: c3b00c709b1f94f22a212add39c80449, type: 2}
   _pawnPrefab: {fileID: 1839143344079602366, guid: 2c0325599477842329501387d1984e5b,
     type: 3}
+  _linePrefab: {fileID: 2724693418191472044, guid: dd4f4fc15996f0d409deefed627139a8,
+    type: 3}
   _pawnsRoot: {fileID: 561077018}
 --- !u!4 &365113527
 Transform:

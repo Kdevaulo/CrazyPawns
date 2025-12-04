@@ -1,69 +1,50 @@
-﻿using UnityEngine;
+﻿using System;
+
+using UnityEngine;
 
 namespace CrazyPawn
 {
-    public sealed class ConnectorView : MonoBehaviour
+    public class ConnectorView : MonoBehaviour
     {
         [SerializeField] private Renderer _renderer;
 
         private Material _defaultMaterial;
         private Material _activeMaterial;
-        private bool _isHighlighted;
 
-        private Camera _camera;
-        private bool _mouseDown;
+        private bool _isHighlighted;
         private bool _isDragging;
+        private bool _mouseDown;
+
         private Vector3 _mouseDownPosition;
+        private Camera _camera;
 
         private const float DragThresholdSqr = 4f;
 
-        public ConnectorController Controller { get; private set; }
         public Renderer Renderer => _renderer;
 
-        public void Initialize(ConnectorController controller, Material activeMaterial)
+        public event Action<ConnectorView> Clicked;
+
+        public event Action<ConnectorView> DragStarted;
+
+        public event Action<ConnectorView> DragEnded;
+
+        public void Initialize(Material activeMaterial)
         {
-            Controller = controller;
-
-            if (_renderer == null)
-            {
-                _renderer = GetComponentInChildren<Renderer>();
-            }
-
-            if (_renderer != null)
-            {
-                _defaultMaterial = _renderer.material;
-            }
-
+            _defaultMaterial = _renderer.material;
             _activeMaterial = activeMaterial;
             SetHighlighted(false);
         }
 
         public void SetHighlighted(bool highlighted)
         {
-            if (_renderer == null)
-                return;
-
             if (_isHighlighted == highlighted)
                 return;
 
             _isHighlighted = highlighted;
 
-            if (_isHighlighted && _activeMaterial != null)
-            {
-                _renderer.material = _activeMaterial;
-            }
-            else if (_defaultMaterial != null)
-            {
-                _renderer.material = _defaultMaterial;
-            }
-        }
-
-        private void Awake()
-        {
-            if (_renderer == null)
-            {
-                _renderer = GetComponentInChildren<Renderer>();
-            }
+            _renderer.material = _isHighlighted
+                ? _activeMaterial
+                : _defaultMaterial;
         }
 
         private void OnMouseDown()
@@ -90,7 +71,7 @@ namespace CrazyPawn
                 if (delta.sqrMagnitude >= DragThresholdSqr)
                 {
                     _isDragging = true;
-                    Controller?.OnDragStart();
+                    DragStarted?.Invoke(this);
                 }
             }
         }
@@ -105,17 +86,17 @@ namespace CrazyPawn
             if (_isDragging)
             {
                 var target = TryGetConnectorUnderMouse();
-                Controller?.OnDragEnd(target);
+                DragEnded?.Invoke(target);
             }
             else
             {
-                Controller?.OnClick();
+                Clicked?.Invoke(this);
             }
 
             _isDragging = false;
         }
 
-        private ConnectorController TryGetConnectorUnderMouse()
+        private ConnectorView TryGetConnectorUnderMouse()
         {
             if (_camera == null)
             {
@@ -130,22 +111,10 @@ namespace CrazyPawn
             if (Physics.Raycast(ray, out var hit, 1000f))
             {
                 var otherView = hit.collider.GetComponentInParent<ConnectorView>();
-
-                if (otherView != null)
-                {
-                    return otherView.Controller;
-                }
+                return otherView;
             }
 
             return null;
-        }
-
-        private void Reset()
-        {
-            if (_renderer == null)
-            {
-                _renderer = GetComponentInChildren<Renderer>();
-            }
         }
     }
 }

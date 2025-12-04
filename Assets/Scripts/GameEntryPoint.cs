@@ -1,132 +1,107 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+
+using UnityEngine;
 
 namespace CrazyPawn
 {
-    public sealed class GameEntryPoint : MonoBehaviour
+    public class GameEntryPoint : MonoBehaviour
     {
         [Header("Settings")]
         [SerializeField] private CrazyPawnSettings _settings;
 
         [Header("Prefabs")]
         [SerializeField] private PawnView _pawnPrefab;
+        [SerializeField] private ConnectionLineView _linePrefab;
 
-        [Header("Scene References")]
+        [Header("References")]
         [SerializeField] private Transform _pawnsRoot;
 
-        public SettingsProvider SettingsProvider { get; private set; }
-        public BoardBounds BoardBounds { get; private set; }
-        public ConnectionManager ConnectionManager { get; private set; }
-
+        private ConnectionManager _connectionManager;
+        private BoardBounds _boardBounds;
         private PawnSpawner _pawnSpawner;
+
+        private readonly Dictionary<PawnView, PawnController> _pawnControllers =
+            new Dictionary<PawnView, PawnController>();
 
         private void Awake()
         {
-            if (_settings == null)
-            {
-                Debug.LogError("[GameEntryPoint] CrazyPawnSettings is not assigned.", this);
-                enabled = false;
-                return;
-            }
+            _boardBounds = new BoardBounds(_settings);
 
-            if (_pawnPrefab == null)
-            {
-                Debug.LogError("[GameEntryPoint] Pawn prefab is not assigned.", this);
-                enabled = false;
-                return;
-            }
+            _connectionManager = new ConnectionManager(CreateConnectionLineView);
 
-            if (_pawnsRoot == null)
-            {
-                _pawnsRoot = transform;
-            }
-
-            SettingsProvider = new SettingsProvider(_settings);
-            BoardBounds = new BoardBounds(SettingsProvider);
-
-            ConnectionManager = new ConnectionManager(CreateConnectionLineView);
-
-            _pawnSpawner = new PawnSpawner(SettingsProvider, CreatePawnAt);
+            _pawnSpawner = new PawnSpawner(_settings, CreatePawnAt);
             _pawnSpawner.SpawnInitialPawns();
+        }
+
+        private void Update()
+        {
+            _connectionManager.Tick();
         }
 
         private PawnView CreatePawnAt(Vector3 position)
         {
-            var pawnInstance = Instantiate(_pawnPrefab, position, Quaternion.identity, _pawnsRoot);
+            var pawnView = Instantiate(_pawnPrefab, position, Quaternion.identity, _pawnsRoot);
 
-            if (pawnInstance == null)
+            var pawnController = new PawnController(pawnView, _connectionManager);
+            _pawnControllers.Add(pawnView, pawnController);
+
+            pawnView.Initialize(_settings.DeleteMaterial);
+
+            var connectorViews = pawnView.ConnectorViews;
+
+            for (var i = 0; i < connectorViews.Count; i++)
             {
-                Debug.LogError("[GameEntryPoint] Pawn prefab instance does not contain PawnView component.", this);
-                return null;
+                var connectorView = connectorViews[i];
+                connectorView.Initialize(_settings.ActiveConnectorMaterial);
+
+                _connectionManager.RegisterConnector(pawnView, connectorView);
             }
 
-            var pawnController = new PawnController(pawnInstance);
+            pawnView.PawnDragged += p => HandleDrag(p, pawnView);
+            pawnView.MouseUp += p => HandleUp(p, pawnView);
 
-            pawnInstance.Initialize(pawnController, SettingsProvider.DeleteMaterial);
-            pawnInstance.DeleteRequested += OnPawnDeleteRequested;
+            return pawnView;
+        }
 
-            var connectorViews = pawnInstance.ConnectorViews;
+        private void HandleUp(Vector3 pos, PawnView view)
+        {
+            var isInside = _boardBounds.IsInside(pos);
+            view.SetMarkedForDeletion(!isInside);
 
-            if (connectorViews == null || connectorViews.Count == 0)
+            if (!isInside)
             {
-                Debug.LogWarning("[GameEntryPoint] PawnView has no ConnectorViews assigned or found.", pawnInstance);
+                // todo: это не работает, надо кешировать чтобы отписаться
+                view.PawnDragged -= p => HandleDrag(p, view);
+                view.MouseUp -= p => HandleUp(p, view);
+                OnPawnDeleteRequested(view);
             }
-            else
-            {
-                foreach (var connectorView in connectorViews)
-                {
-                    if (connectorView == null)
-                        continue;
+        }
 
-                    var connectorController = new ConnectorController(pawnController, connectorView, ConnectionManager);
-
-                    connectorView.Initialize(connectorController, SettingsProvider.ActiveConnectorMaterial);
-
-                    pawnController.AddConnector(connectorController);
-                    ConnectionManager.RegisterConnector(connectorController);
-                }
-            }
-
-            var dragHandler = pawnInstance.GetComponentInChildren<PawnDragHandler>(true);
-
-            if (dragHandler != null)
-            {
-                dragHandler.Initialize(BoardBounds);
-            }
-            else
-            {
-                Debug.LogWarning("[GameEntryPoint] Pawn prefab has no PawnDragHandler attached.", pawnInstance);
-            }
-
-            return pawnInstance;
+        private void HandleDrag(Vector3 pos, PawnView view)
+        {
+            var isInside = _boardBounds.IsInside(pos);
+            view.SetMarkedForDeletion(!isInside);
         }
 
         private ConnectionLineView CreateConnectionLineView()
         {
-            var go = new GameObject("ConnectionLine");
-            go.transform.SetParent(transform, false);
-
-            var view = go.AddComponent<ConnectionLineView>();
+            var view = Instantiate(_linePrefab, transform);
             view.Init();
 
             return view;
         }
 
-        private void OnPawnDeleteRequested(PawnController pawn)
+        private void OnPawnDeleteRequested(PawnView pawnView)
         {
-            if (pawn == null)
-                return;
-
-            ConnectionManager.RemoveConnectionsForPawn(pawn);
-
-            if (pawn.View != null)
+            if (!_pawnControllers.TryGetValue(pawnView, out var pawnController))
             {
-                Destroy(pawn.View.gameObject);
+                return;
             }
-        }
 
-        private void Update()
-        {
-            ConnectionManager.Tick();
+            _connectionManager.RemoveConnectionsForPawn(pawnView);
+            _pawnControllers.Remove(pawnView);
+            pawnController.Dispose();
+            Destroy(pawnView.gameObject);
         }
     }
 }
