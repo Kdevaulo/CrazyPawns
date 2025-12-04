@@ -152,12 +152,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef9d882e1a674c22bba64baf3ebbc191, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _settings: {fileID: 11400000, guid: c3b00c709b1f94f22a212add39c80449, type: 2}
-  _pawnPrefab: {fileID: 1839143344079602366, guid: 2c0325599477842329501387d1984e5b,
-    type: 3}
   _linePrefab: {fileID: 2724693418191472044, guid: dd4f4fc15996f0d409deefed627139a8,
     type: 3}
+  _settings: {fileID: 11400000, guid: c3b00c709b1f94f22a212add39c80449, type: 2}
+  _boardBounds: {fileID: 561077019}
   _pawnsRoot: {fileID: 561077018}
+  _pawnPrefab: {fileID: 1839143344079602366, guid: 2c0325599477842329501387d1984e5b,
+    type: 3}
 --- !u!4 &365113527
 Transform:
   m_ObjectHideFlags: 0
@@ -303,6 +304,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 561077018}
+  - component: {fileID: 561077019}
   m_Layer: 0
   m_Name: PawnsContainer
   m_TagString: Untagged
@@ -325,6 +327,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 365113527}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &561077019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 561077017}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08c68e57159d419b9d554550ec45aeba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &930532582 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5123404994487423726, guid: 368457728b5d74561b805d9bb789017e,

@@ -6,18 +6,13 @@ namespace CrazyPawn
 {
     public class GameEntryPoint : MonoBehaviour
     {
-        [Header("Settings")]
-        [SerializeField] private CrazyPawnSettings _settings;
-
-        [Header("Prefabs")]
-        [SerializeField] private PawnView _pawnPrefab;
         [SerializeField] private ConnectionLineView _linePrefab;
-
-        [Header("References")]
+        [SerializeField] private CrazyPawnSettings _settings;
+        [SerializeField] private BoardBounds _boardBounds;
         [SerializeField] private Transform _pawnsRoot;
+        [SerializeField] private PawnView _pawnPrefab;
 
         private ConnectionManager _connectionManager;
-        private BoardBounds _boardBounds;
         private PawnSpawner _pawnSpawner;
 
         private readonly Dictionary<PawnView, PawnController> _pawnControllers =
@@ -25,11 +20,10 @@ namespace CrazyPawn
 
         private void Awake()
         {
-            _boardBounds = new BoardBounds(_settings);
-
             _connectionManager = new ConnectionManager(CreateConnectionLineView);
-
             _pawnSpawner = new PawnSpawner(_settings, CreatePawnAt);
+
+            _boardBounds.Initialize(_settings);
             _pawnSpawner.SpawnInitialPawns();
         }
 
