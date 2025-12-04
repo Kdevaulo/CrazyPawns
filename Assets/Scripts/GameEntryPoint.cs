@@ -48,7 +48,7 @@ namespace CrazyPawn
             SettingsProvider = new SettingsProvider(_settings);
             BoardBounds = new BoardBounds(SettingsProvider);
 
-            // Менеджер соединений (логика появится на этапах 4–6)
+            // Менеджер соединений
             ConnectionManager = new ConnectionManager();
 
             // Спавнер фигур
@@ -91,7 +91,9 @@ namespace CrazyPawn
                         continue;
 
                     var connectorController = new ConnectorController(pawnController, connectorView, ConnectionManager);
-                    connectorView.Initialize(connectorController);
+
+                    // Важно: передаём ActiveConnectorMaterial из настроек
+                    connectorView.Initialize(connectorController, SettingsProvider.ActiveConnectorMaterial);
 
                     pawnController.AddConnector(connectorController);
                     ConnectionManager.RegisterConnector(connectorController);
@@ -121,7 +123,6 @@ namespace CrazyPawn
             if (pawn == null)
                 return;
 
-            // Очистка соединений для этой фигуры (реальная логика будет позже, на этапе 7).
             ConnectionManager.RemoveConnectionsForPawn(pawn);
 
             if (pawn.View != null)
@@ -132,8 +133,8 @@ namespace CrazyPawn
 
         private void Update()
         {
-            // На следующих этапах здесь будет, например:
-            // ConnectionManager.Tick();
+            // Пока Tick пустой, но цепочка уже настроена — на этапе 5 добавим обновление линий.
+            ConnectionManager.Tick();
         }
     }
 }
