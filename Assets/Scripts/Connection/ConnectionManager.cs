@@ -1,21 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+
+using UnityEngine;
+
+using Object = UnityEngine.Object;
 
 namespace CrazyPawn
 {
     public class ConnectionManager
     {
+        private readonly ConnectionLineView _linePrefab;
+        private readonly Transform _container;
+
         private readonly List<ConnectionInfo> _connections = new List<ConnectionInfo>();
         private readonly List<ConnectorInfo> _connectors = new List<ConnectorInfo>();
-
-        private readonly Func<ConnectionLineView> _createdLineView;
 
         private ConnectorInfo _firstSelected;
         private ConnectorInfo _dragSource;
 
-        public ConnectionManager(Func<ConnectionLineView> createLineView)
+        public ConnectionManager(ConnectionLineView linePrefab, Transform container)
         {
-            _createdLineView = createLineView;
+            _linePrefab = linePrefab;
+            _container = container;
         }
 
         public void RegisterConnector(PawnView pawn, ConnectorView connectorView)
@@ -173,10 +178,8 @@ namespace CrazyPawn
                     return;
             }
 
-            var view = _createdLineView.Invoke();
-            if (view == null)
-                return;
-
+            var view = Object.Instantiate(_linePrefab, _container);
+            view.Initialize();
             _connections.Add(new ConnectionInfo(a, b, view));
         }
 

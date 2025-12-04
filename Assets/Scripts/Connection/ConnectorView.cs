@@ -6,7 +6,13 @@ namespace CrazyPawn
 {
     public class ConnectorView : MonoBehaviour
     {
+        public event Action<ConnectorView> DragStarted;
+        public event Action<ConnectorView> DragEnded;
+        public event Action<ConnectorView> Clicked;
+
         [SerializeField] private Renderer _renderer;
+
+        private const float DragThresholdSqr = 4f;
 
         private Material _defaultMaterial;
         private Material _activeMaterial;
@@ -17,16 +23,6 @@ namespace CrazyPawn
 
         private Vector3 _mouseDownPosition;
         private Camera _camera;
-
-        private const float DragThresholdSqr = 4f;
-
-        public Renderer Renderer => _renderer;
-
-        public event Action<ConnectorView> Clicked;
-
-        public event Action<ConnectorView> DragStarted;
-
-        public event Action<ConnectorView> DragEnded;
 
         public void Initialize(Material activeMaterial)
         {
@@ -54,9 +50,7 @@ namespace CrazyPawn
             _mouseDownPosition = Input.mousePosition;
 
             if (_camera == null)
-            {
                 _camera = Camera.main;
-            }
         }
 
         private void OnMouseDrag()
@@ -99,9 +93,7 @@ namespace CrazyPawn
         private ConnectorView TryGetConnectorUnderMouse()
         {
             if (_camera == null)
-            {
                 _camera = Camera.main;
-            }
 
             if (_camera == null)
                 return null;

@@ -8,7 +8,7 @@ namespace CrazyPawn
 
         private const float Width = 0.07f;
 
-        public void Init()
+        public void Initialize()
         {
             _lineRenderer.positionCount = 2;
             _lineRenderer.useWorldSpace = true;

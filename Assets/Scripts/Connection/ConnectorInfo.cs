@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CrazyPawn
+﻿namespace CrazyPawn
 {
     public class ConnectorInfo
     {

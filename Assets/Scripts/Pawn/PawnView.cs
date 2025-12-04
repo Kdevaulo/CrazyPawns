@@ -24,7 +24,6 @@ namespace CrazyPawn
         private Plane _dragPlane;
 
         private bool _isMarkedForDeletion;
-        private bool _isOutsideBoard;
         private bool _isDragging;
 
         public void Initialize(Material deleteMaterial)
@@ -54,6 +53,11 @@ namespace CrazyPawn
                     ? _deleteMaterial
                     : _defaultMaterials[i];
             }
+        }
+
+        public void DestroySelf()
+        {
+            Destroy(gameObject);
         }
 
         private void OnMouseDown()
