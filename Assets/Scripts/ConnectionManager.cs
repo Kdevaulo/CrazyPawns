@@ -4,25 +4,23 @@ using System.Collections.Generic;
 namespace CrazyPawn
 {
     /// <summary>
-    /// Управляет режимом выбора коннекторов, подсветкой и логическими соединениями (без линий).
+    /// Управляет выбором коннекторов, подсветкой и ConnectionLine (+ их Tick).
     /// </summary>
     public sealed class ConnectionManager
     {
-        private sealed class ConnectionRecord
-        {
-            public ConnectorController A;
-            public ConnectorController B;
-        }
+        private readonly Func<ConnectionLineView> _createLineView;
 
         private readonly List<ConnectorController> _connectors = new List<ConnectorController>();
-        private readonly List<ConnectionRecord> _connections = new List<ConnectionRecord>();
+        private readonly List<ConnectionLine> _lines = new List<ConnectionLine>();
 
         private ConnectorController _firstSelected;
 
-        /// <summary>
-        /// Все зарегистрированные коннекторы.
-        /// </summary>
         public IReadOnlyList<ConnectorController> Connectors => _connectors;
+
+        public ConnectionManager(Func<ConnectionLineView> createLineView)
+        {
+            _createLineView = createLineView ?? throw new ArgumentNullException(nameof(createLineView));
+        }
 
         /// <summary>
         /// Регистрация коннектора, вызывается при создании фигур.
@@ -39,35 +37,30 @@ namespace CrazyPawn
 
         /// <summary>
         /// Обработка клика по коннектору.
-        /// Логика:
-        /// - нет выбранного → начинаем выбор, подсвечиваем доступные;
-        /// - клик по тому же → отменяем выбор;
-        /// - клик по несовместимому → начинаем новый выбор с этого коннектора;
-        /// - клик по валидному → создаём соединение и выходим из режима выбора.
         /// </summary>
         public void OnConnectorClicked(ConnectorController connector)
         {
             if (connector == null)
                 return;
 
-            // ещё ничего не выбрано — начинаем выбор
+            // ничего не выбрано — начинаем выбор
             if (_firstSelected == null)
             {
                 StartSelection(connector);
                 return;
             }
 
-            // клик по тому же коннектору — отмена режима
+            // клик по тому же коннектору — отмена выбора
             if (ReferenceEquals(_firstSelected, connector))
             {
                 ClearSelection();
                 return;
             }
 
-            // второй коннектор — проверяем, можно ли соединить
+            // второй коннектор — проверяем валидность
             if (!CanConnect(_firstSelected, connector))
             {
-                // Невалидный второй клик: начинаем выбор заново с этого коннектора
+                // невалидный второй клик — новый выбор с этого коннектора
                 StartSelection(connector);
                 return;
             }
@@ -84,7 +77,7 @@ namespace CrazyPawn
         }
 
         /// <summary>
-        /// Проверка, можно ли соединить два коннектора (без учёта уже существующих связей).
+        /// Можно ли соединить два коннектора (без учёта уже существующих связей).
         /// </summary>
         private bool CanConnect(ConnectorController a, ConnectorController b)
         {
@@ -99,28 +92,37 @@ namespace CrazyPawn
         }
 
         /// <summary>
-        /// Создаёт логическую связь между двумя коннекторами, если такой ещё нет.
+        /// Создаёт ConnectionLine, если такой пары ещё нет.
         /// </summary>
         private void CreateConnectionIfNotExists(ConnectorController a, ConnectorController b)
         {
             if (!CanConnect(a, b))
                 return;
 
-            foreach (var record in _connections)
+            // Проверяем, что линии между этими коннекторами ещё нет.
+            foreach (var line in _lines)
             {
-                if (ReferenceEquals(record.A, a) && ReferenceEquals(record.B, b) ||
-                    ReferenceEquals(record.A, b) && ReferenceEquals(record.B, a))
+                if (ReferenceEquals(line.A, a) && ReferenceEquals(line.B, b) ||
+                    ReferenceEquals(line.A, b) && ReferenceEquals(line.B, a))
                 {
-                    // Уже есть такая связь
                     return;
                 }
             }
 
-            _connections.Add(new ConnectionRecord { A = a, B = b });
+            var view = _createLineView?.Invoke();
+
+            if (view == null)
+            {
+                // Нет возможности создать визуал — просто выходим.
+                return;
+            }
+
+            var connectionLine = new ConnectionLine(a, b, view);
+            _lines.Add(connectionLine);
         }
 
         /// <summary>
-        /// Подсветить первый выбранный коннектор и все доступные цели.
+        /// Подсветить выбранный коннектор и все доступные цели.
         /// </summary>
         private void HighlightAvailableConnectors()
         {
@@ -129,7 +131,6 @@ namespace CrazyPawn
             if (_firstSelected == null)
                 return;
 
-            // выбранный коннектор всегда подсвечиваем
             _firstSelected.View?.SetHighlighted(true);
 
             foreach (var connector in _connectors)
@@ -164,30 +165,30 @@ namespace CrazyPawn
             ClearHighlight();
         }
 
-        /// <summary>
-        /// Заглушки под будущее drag-соединение (этап 6).
-        /// </summary>
+        // Drag-соединения — этап 6.
         public void OnConnectorDragStart(ConnectorController connector)
         {
-            // Этап 6.
+            // Будет реализовано на этапе 6.
         }
 
         public void OnConnectorDragEnd(ConnectorController connectorOrNull)
         {
-            // Этап 6.
+            // Будет реализовано на этапе 6.
         }
 
         /// <summary>
-        /// Tick для обновления линий появится на этапе 5.
+        /// Обновление всех активных линий.
         /// </summary>
         public void Tick()
         {
-            // Этап 5 — обновление ConnectionLine.
+            for (var i = 0; i < _lines.Count; i++)
+            {
+                _lines[i].Tick();
+            }
         }
 
         /// <summary>
-        /// Удаляет все логические соединения и коннекторы, относящиеся к указанной фигуре.
-        /// Линии будут чиститься дополнительно на этапе 7.
+        /// Удаляет все коннекторы и линии, относящиеся к указанной фигуре.
         /// </summary>
         public void RemoveConnectionsForPawn(PawnController pawn)
         {
@@ -200,14 +201,15 @@ namespace CrazyPawn
                 ClearSelection();
             }
 
-            // Удаляем все связи, где участвуют коннекторы этой фигуры.
-            for (var i = _connections.Count - 1; i >= 0; i--)
+            // Удаляем все линии, где участвуют коннекторы этой фигуры.
+            for (var i = _lines.Count - 1; i >= 0; i--)
             {
-                var c = _connections[i];
+                var line = _lines[i];
 
-                if (ReferenceEquals(c.A?.Pawn, pawn) || ReferenceEquals(c.B?.Pawn, pawn))
+                if (ReferenceEquals(line.A?.Pawn, pawn) || ReferenceEquals(line.B?.Pawn, pawn))
                 {
-                    _connections.RemoveAt(i);
+                    line.Dispose();
+                    _lines.RemoveAt(i);
                 }
             }
 

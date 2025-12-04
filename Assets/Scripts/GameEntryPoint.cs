@@ -4,7 +4,7 @@ namespace CrazyPawn
 {
     /// <summary>
     /// Корневой компонент сцены.
-    /// Инициализирует настройки, границы доски, менеджер соединений и фигуры.
+    /// Инициализирует настройки, границы доски, менеджер соединений, фигуры и линии.
     /// </summary>
     public sealed class GameEntryPoint : MonoBehaviour
     {
@@ -48,8 +48,8 @@ namespace CrazyPawn
             SettingsProvider = new SettingsProvider(_settings);
             BoardBounds = new BoardBounds(SettingsProvider);
 
-            // Менеджер соединений
-            ConnectionManager = new ConnectionManager();
+            // Менеджер соединений получает фабрику создания вью линий
+            ConnectionManager = new ConnectionManager(CreateConnectionLineView);
 
             // Спавнер фигур
             _pawnSpawner = new PawnSpawner(SettingsProvider, CreatePawnAt);
@@ -92,7 +92,7 @@ namespace CrazyPawn
 
                     var connectorController = new ConnectorController(pawnController, connectorView, ConnectionManager);
 
-                    // Важно: передаём ActiveConnectorMaterial из настроек
+                    // ActiveConnectorMaterial из настроек
                     connectorView.Initialize(connectorController, SettingsProvider.ActiveConnectorMaterial);
 
                     pawnController.AddConnector(connectorController);
@@ -116,6 +116,20 @@ namespace CrazyPawn
         }
 
         /// <summary>
+        /// Фабрика создания вью линий для ConnectionManager.
+        /// </summary>
+        private ConnectionLineView CreateConnectionLineView()
+        {
+            var go = new GameObject("ConnectionLine");
+            go.transform.SetParent(transform, false);
+
+            var view = go.AddComponent<ConnectionLineView>();
+            view.Init();
+
+            return view;
+        }
+
+        /// <summary>
         /// Обработка запроса удаления фигуры (при отпускании мыши вне доски).
         /// </summary>
         private void OnPawnDeleteRequested(PawnController pawn)
@@ -133,7 +147,7 @@ namespace CrazyPawn
 
         private void Update()
         {
-            // Пока Tick пустой, но цепочка уже настроена — на этапе 5 добавим обновление линий.
+            // Теперь Tick реально обновляет позиции всех линий.
             ConnectionManager.Tick();
         }
     }
