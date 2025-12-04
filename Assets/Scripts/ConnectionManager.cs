@@ -4,7 +4,8 @@ using System.Collections.Generic;
 namespace CrazyPawn
 {
     /// <summary>
-    /// Управляет выбором коннекторов, подсветкой и ConnectionLine (+ их Tick).
+    /// Управляет выбором коннекторов, подсветкой и ConnectionLine (+ их Tick),
+    /// а также drag-соединениями.
     /// </summary>
     public sealed class ConnectionManager
     {
@@ -13,7 +14,11 @@ namespace CrazyPawn
         private readonly List<ConnectorController> _connectors = new List<ConnectorController>();
         private readonly List<ConnectionLine> _lines = new List<ConnectionLine>();
 
+        // Режим кликов (этап 4)
         private ConnectorController _firstSelected;
+
+        // Режим drag (этап 6)
+        private ConnectorController _dragSource;
 
         public IReadOnlyList<ConnectorController> Connectors => _connectors;
 
@@ -28,15 +33,18 @@ namespace CrazyPawn
         public void RegisterConnector(ConnectorController connector)
         {
             if (connector == null) throw new ArgumentNullException(nameof(connector));
-
             if (!_connectors.Contains(connector))
             {
                 _connectors.Add(connector);
             }
         }
 
+        // ======================
+        //  РЕЖИМ КЛИКОВ
+        // ======================
+
         /// <summary>
-        /// Обработка клика по коннектору.
+        /// Обработка клика по коннектору (режим этапа 4).
         /// </summary>
         public void OnConnectorClicked(ConnectorController connector)
         {
@@ -102,15 +110,14 @@ namespace CrazyPawn
             // Проверяем, что линии между этими коннекторами ещё нет.
             foreach (var line in _lines)
             {
-                if (ReferenceEquals(line.A, a) && ReferenceEquals(line.B, b) ||
-                    ReferenceEquals(line.A, b) && ReferenceEquals(line.B, a))
+                if ((ReferenceEquals(line.A, a) && ReferenceEquals(line.B, b)) ||
+                    (ReferenceEquals(line.A, b) && ReferenceEquals(line.B, a)))
                 {
                     return;
                 }
             }
 
             var view = _createLineView?.Invoke();
-
             if (view == null)
             {
                 // Нет возможности создать визуал — просто выходим.
@@ -157,7 +164,7 @@ namespace CrazyPawn
         }
 
         /// <summary>
-        /// Очистить текущий выбор и подсветку.
+        /// Очистить текущий выбор и подсветку (кликовый режим).
         /// </summary>
         private void ClearSelection()
         {
@@ -165,23 +172,61 @@ namespace CrazyPawn
             ClearHighlight();
         }
 
-        // Drag-соединения — этап 6.
+        // ======================
+        //  РЕЖИМ DRAG
+        // ======================
+
+        /// <summary>
+        /// Начало drag-соединения от указанного коннектора.
+        /// Должно вести себя визуально так же, как клик:
+        /// подсвечиваем источник и все доступные цели.
+        /// </summary>
         public void OnConnectorDragStart(ConnectorController connector)
         {
-            // Будет реализовано на этапе 6.
+            if (connector == null)
+                return;
+
+            _dragSource = connector;
+
+            // Используем ту же логику подсветки, что и при клике:
+            // выбранный коннектор + все валидные цели.
+            StartSelection(connector);
         }
 
+        /// <summary>
+        /// Завершение drag-соединения. connectorOrNull — коннектор под курсором или null.
+        /// Подсветка должна пропасть по итогам drag независимо от результата.
+        /// </summary>
         public void OnConnectorDragEnd(ConnectorController connectorOrNull)
         {
-            // Будет реализовано на этапе 6.
+            if (_dragSource == null)
+                return;
+
+            var source = _dragSource;
+            _dragSource = null;
+
+            // Снимаем подсветку (как при завершении выбора по клику)
+            ClearSelection();
+
+            if (connectorOrNull == null)
+                return;
+
+            if (!CanConnect(source, connectorOrNull))
+                return;
+
+            CreateConnectionIfNotExists(source, connectorOrNull);
         }
+
+        // ======================
+        //  ОБНОВЛЕНИЕ И УДАЛЕНИЕ
+        // ======================
 
         /// <summary>
         /// Обновление всех активных линий.
         /// </summary>
         public void Tick()
         {
-            for (var i = 0; i < _lines.Count; i++)
+            for (int i = 0; i < _lines.Count; i++)
             {
                 _lines[i].Tick();
             }
@@ -201,11 +246,16 @@ namespace CrazyPawn
                 ClearSelection();
             }
 
+            // Если drag начинался от этой фигуры — сбрасываем.
+            if (_dragSource != null && ReferenceEquals(_dragSource.Pawn, pawn))
+            {
+                _dragSource = null;
+            }
+
             // Удаляем все линии, где участвуют коннекторы этой фигуры.
-            for (var i = _lines.Count - 1; i >= 0; i--)
+            for (int i = _lines.Count - 1; i >= 0; i--)
             {
                 var line = _lines[i];
-
                 if (ReferenceEquals(line.A?.Pawn, pawn) || ReferenceEquals(line.B?.Pawn, pawn))
                 {
                     line.Dispose();
@@ -214,10 +264,9 @@ namespace CrazyPawn
             }
 
             // Убираем из реестра коннекторов все коннекторы этой фигуры.
-            for (var i = _connectors.Count - 1; i >= 0; i--)
+            for (int i = _connectors.Count - 1; i >= 0; i--)
             {
                 var connector = _connectors[i];
-
                 if (connector?.Pawn != null && ReferenceEquals(connector.Pawn, pawn))
                 {
                     _connectors.RemoveAt(i);
