@@ -1,0 +1,33 @@
+﻿using UnityEngine;
+
+namespace CrazyPawn
+{
+    /// <summary>
+    /// Обёртка над CrazyPawnSettings.
+    /// Отвечает за предоставление настроек доменной логике.
+    /// </summary>
+    public class SettingsProvider
+    {
+        private readonly CrazyPawnSettings _settings;
+
+        public SettingsProvider(CrazyPawnSettings settings)
+        {
+            _settings = settings;
+        }
+
+        public float InitialZoneRadius => _settings.InitialZoneRadius;
+        public int InitialPawnCount => _settings.InitialPawnCount;
+
+        public Material DeleteMaterial => _settings.DeleteMaterial;
+        public Material ActiveConnectorMaterial => _settings.ActiveConnectorMaterial;
+
+        public int CheckerboardSize => _settings.CheckerboardSize;
+        public Color BlackCellColor => _settings.BlackCellColor;
+        public Color WhiteCellColor => _settings.WhiteCellColor;
+
+        /// <summary>
+        /// Доступ к исходному ScriptableObject при необходимости.
+        /// </summary>
+        public CrazyPawnSettings RawSettings => _settings;
+    }
+}
