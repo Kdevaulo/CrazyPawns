@@ -5,10 +5,6 @@ using UnityEngine;
 
 namespace CrazyPawn
 {
-    /// <summary>
-    /// Доменная сущность "фигура".
-    /// Хранит ссылку на PawnView и свои коннекторы.
-    /// </summary>
     public sealed class PawnController
     {
         private readonly PawnView _view;
@@ -17,9 +13,6 @@ namespace CrazyPawn
         public PawnView View => _view;
         public IReadOnlyList<ConnectorController> Connectors => _connectors;
 
-        /// <summary>
-        /// Позиция центра фигуры (через view.transform).
-        /// </summary>
         public Vector3 Position => _view.transform.position;
 
         public PawnController(PawnView view)

@@ -6,9 +6,6 @@ using Random = System.Random;
 
 namespace CrazyPawn
 {
-    /// <summary>
-    /// Логика спавна фигур: читает настройки, выбирает позиции и вызывает фабрику.
-    /// </summary>
     public sealed class PawnSpawner
     {
         private readonly SettingsProvider _settingsProvider;
@@ -25,9 +22,6 @@ namespace CrazyPawn
             _random = seed.HasValue ? new Random(seed.Value) : new Random();
         }
 
-        /// <summary>
-        /// Спавнит InitialPawnCount фигур в круге InitialZoneRadius.
-        /// </summary>
         public void SpawnInitialPawns()
         {
             var count = _settingsProvider.InitialPawnCount;
@@ -42,7 +36,6 @@ namespace CrazyPawn
 
         private Vector3 GetRandomPositionInCircle(float radius)
         {
-            // Равномерное распределение по площади круга
             var angle = _random.NextDouble() * Math.PI * 2.0;
             var distance = Math.Sqrt(_random.NextDouble()) * radius;
 

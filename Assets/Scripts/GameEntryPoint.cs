@@ -2,10 +2,6 @@
 
 namespace CrazyPawn
 {
-    /// <summary>
-    /// Корневой компонент сцены.
-    /// Инициализирует настройки, границы доски, менеджер соединений, фигуры и линии.
-    /// </summary>
     public sealed class GameEntryPoint : MonoBehaviour
     {
         [Header("Settings")]
@@ -44,21 +40,15 @@ namespace CrazyPawn
                 _pawnsRoot = transform;
             }
 
-            // Инфраструктура
             SettingsProvider = new SettingsProvider(_settings);
             BoardBounds = new BoardBounds(SettingsProvider);
 
-            // Менеджер соединений получает фабрику создания вью линий
             ConnectionManager = new ConnectionManager(CreateConnectionLineView);
 
-            // Спавнер фигур
             _pawnSpawner = new PawnSpawner(SettingsProvider, CreatePawnAt);
             _pawnSpawner.SpawnInitialPawns();
         }
 
-        /// <summary>
-        /// Фабрика для PawnSpawner: инстанцирует префаб, создаёт контроллеры и навешивает обработчики.
-        /// </summary>
         private PawnView CreatePawnAt(Vector3 position)
         {
             var pawnInstance = Instantiate(_pawnPrefab, position, Quaternion.identity, _pawnsRoot);
@@ -69,14 +59,11 @@ namespace CrazyPawn
                 return null;
             }
 
-            // Контроллер фигуры
             var pawnController = new PawnController(pawnInstance);
 
-            // Инициализация вью: материалы и ссылки
             pawnInstance.Initialize(pawnController, SettingsProvider.DeleteMaterial);
             pawnInstance.DeleteRequested += OnPawnDeleteRequested;
 
-            // Коннекторы
             var connectorViews = pawnInstance.ConnectorViews;
 
             if (connectorViews == null || connectorViews.Count == 0)
@@ -92,7 +79,6 @@ namespace CrazyPawn
 
                     var connectorController = new ConnectorController(pawnController, connectorView, ConnectionManager);
 
-                    // ActiveConnectorMaterial из настроек
                     connectorView.Initialize(connectorController, SettingsProvider.ActiveConnectorMaterial);
 
                     pawnController.AddConnector(connectorController);
@@ -100,7 +86,6 @@ namespace CrazyPawn
                 }
             }
 
-            // Drag по телу фигуры
             var dragHandler = pawnInstance.GetComponentInChildren<PawnDragHandler>(true);
 
             if (dragHandler != null)
@@ -115,9 +100,6 @@ namespace CrazyPawn
             return pawnInstance;
         }
 
-        /// <summary>
-        /// Фабрика создания вью линий для ConnectionManager.
-        /// </summary>
         private ConnectionLineView CreateConnectionLineView()
         {
             var go = new GameObject("ConnectionLine");
@@ -129,9 +111,6 @@ namespace CrazyPawn
             return view;
         }
 
-        /// <summary>
-        /// Обработка запроса удаления фигуры (при отпускании мыши вне доски).
-        /// </summary>
         private void OnPawnDeleteRequested(PawnController pawn)
         {
             if (pawn == null)
@@ -147,7 +126,6 @@ namespace CrazyPawn
 
         private void Update()
         {
-            // Теперь Tick реально обновляет позиции всех линий.
             ConnectionManager.Tick();
         }
     }

@@ -2,17 +2,10 @@
 
 namespace CrazyPawn
 {
-    /// <summary>
-    /// Вью линии соединения. Оборачивает LineRenderer.
-    /// </summary>
     public sealed class ConnectionLineView : MonoBehaviour
     {
         private LineRenderer _lineRenderer;
 
-        /// <summary>
-        /// Первичная настройка LineRenderer:
-        /// 2 точки, толщина 0.07, белый unlit-материал.
-        /// </summary>
         public void Init()
         {
             if (_lineRenderer == null)
@@ -32,7 +25,6 @@ namespace CrazyPawn
             _lineRenderer.startWidth = width;
             _lineRenderer.endWidth = width;
 
-            // Материал: пытаемся найти unlit-шейдер, красим в белый.
             if (_lineRenderer.material == null)
             {
                 var shader = Shader.Find("Universal Render Pipeline/Unlit");
@@ -55,9 +47,6 @@ namespace CrazyPawn
             }
         }
 
-        /// <summary>
-        /// Обновляет позиции концов линии.
-        /// </summary>
         public void SetPositions(Vector3 a, Vector3 b)
         {
             if (_lineRenderer == null)
@@ -74,9 +63,6 @@ namespace CrazyPawn
             _lineRenderer.SetPosition(1, b);
         }
 
-        /// <summary>
-        /// Уничтожает объект линии.
-        /// </summary>
         public void DestroySelf()
         {
             Destroy(gameObject);

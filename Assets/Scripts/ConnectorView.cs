@@ -2,10 +2,6 @@
 
 namespace CrazyPawn
 {
-    /// <summary>
-    /// View шаро-коннектора.
-    /// Отвечает за инпут (клик и drag) и визуальную подсветку.
-    /// </summary>
     public sealed class ConnectorView : MonoBehaviour
     {
         [SerializeField] private Renderer _renderer;
@@ -19,15 +15,11 @@ namespace CrazyPawn
         private bool _isDragging;
         private Vector3 _mouseDownPosition;
 
-        // Чуть-чуть порог, чтобы отличать клик от drag.
-        private const float DragThresholdSqr = 4f; // ~2 пикселя
+        private const float DragThresholdSqr = 4f;
 
         public ConnectorController Controller { get; private set; }
         public Renderer Renderer => _renderer;
 
-        /// <summary>
-        /// Инициализация: связываем с контроллером и запоминаем материалы.
-        /// </summary>
         public void Initialize(ConnectorController controller, Material activeMaterial)
         {
             Controller = controller;
@@ -39,7 +31,6 @@ namespace CrazyPawn
 
             if (_renderer != null)
             {
-                // Берём instance-материал как "обычный"
                 _defaultMaterial = _renderer.material;
             }
 
@@ -47,9 +38,6 @@ namespace CrazyPawn
             SetHighlighted(false);
         }
 
-        /// <summary>
-        /// Включить/выключить подсветку коннектора.
-        /// </summary>
         public void SetHighlighted(bool highlighted)
         {
             if (_renderer == null)
@@ -102,13 +90,9 @@ namespace CrazyPawn
                 if (delta.sqrMagnitude >= DragThresholdSqr)
                 {
                     _isDragging = true;
-                    // Старт drag-соединения
                     Controller?.OnDragStart();
                 }
             }
-
-            // На этапе 6 никаких превью-линий не рисуем,
-            // только создаём соединение при отпускании мыши.
         }
 
         private void OnMouseUp()
@@ -120,22 +104,17 @@ namespace CrazyPawn
 
             if (_isDragging)
             {
-                // Завершение drag-соединения: ищем коннектор под курсором
                 var target = TryGetConnectorUnderMouse();
                 Controller?.OnDragEnd(target);
             }
             else
             {
-                // Обычный клик по коннектору (режим этапа 4)
                 Controller?.OnClick();
             }
 
             _isDragging = false;
         }
 
-        /// <summary>
-        /// Пытаемся найти другой ConnectorView под курсором при окончании drag.
-        /// </summary>
         private ConnectorController TryGetConnectorUnderMouse()
         {
             if (_camera == null)
@@ -154,7 +133,6 @@ namespace CrazyPawn
 
                 if (otherView != null)
                 {
-                    // Разрешаем передать даже "сам себя" — ConnectionManager отфильтрует.
                     return otherView.Controller;
                 }
             }

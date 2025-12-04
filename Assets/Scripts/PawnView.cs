@@ -5,10 +5,6 @@ using UnityEngine;
 
 namespace CrazyPawn
 {
-    /// <summary>
-    /// View-фигура: хранит ссылки на контроллер, рендеры, коннекторы
-    /// и применяет визуальные изменения по командам логики.
-    /// </summary>
     public sealed class PawnView : MonoBehaviour
     {
         [Header("Visual")]
@@ -24,15 +20,8 @@ namespace CrazyPawn
         public Renderer BodyRenderer => _bodyRenderer;
         public IReadOnlyList<ConnectorView> ConnectorViews => _connectorViews;
 
-        /// <summary>
-        /// Событие запроса удаления фигуры.
-        /// Обработчик получает PawnController.
-        /// </summary>
         public event Action<PawnController> DeleteRequested;
 
-        /// <summary>
-        /// Инициализация: установка контроллера, подготовка рендеров и MaterialSwitcher.
-        /// </summary>
         public void Initialize(PawnController controller, Material deleteMaterial)
         {
             Controller = controller;
@@ -78,17 +67,12 @@ namespace CrazyPawn
 
             for (var i = 0; i < _allRenderers.Length; i++)
             {
-                // Берём instance-материал, чтобы у каждого Pawn был свой набор
                 defaultMaterials[i] = _allRenderers[i].material;
             }
 
             _materialSwitcher = new PawnMaterialSwitcher(deleteMaterial, defaultMaterials);
         }
 
-        /// <summary>
-        /// Подсветка фигуры как "удаляемой" или возврат в нормальное состояние.
-        /// Меняет материалы у тела и всех коннекторов.
-        /// </summary>
         public void SetMarkedForDeletion(bool isMarked)
         {
             if (_materialSwitcher == null || _allRenderers == null)
@@ -108,9 +92,6 @@ namespace CrazyPawn
             }
         }
 
-        /// <summary>
-        /// Запросить удаление фигуры (событие уходит наружу, в контроллеры/EntryPoint).
-        /// </summary>
         public void RequestDelete()
         {
             if (Controller == null)

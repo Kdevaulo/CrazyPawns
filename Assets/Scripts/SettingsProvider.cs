@@ -2,10 +2,6 @@
 
 namespace CrazyPawn
 {
-    /// <summary>
-    /// Обёртка над CrazyPawnSettings.
-    /// Отвечает за предоставление настроек доменной логике.
-    /// </summary>
     public class SettingsProvider
     {
         private readonly CrazyPawnSettings _settings;
@@ -25,9 +21,6 @@ namespace CrazyPawn
         public Color BlackCellColor => _settings.BlackCellColor;
         public Color WhiteCellColor => _settings.WhiteCellColor;
 
-        /// <summary>
-        /// Доступ к исходному ScriptableObject при необходимости.
-        /// </summary>
         public CrazyPawnSettings RawSettings => _settings;
     }
 }

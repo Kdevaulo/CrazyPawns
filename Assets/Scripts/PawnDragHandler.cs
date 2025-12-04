@@ -2,11 +2,6 @@
 
 namespace CrazyPawn
 {
-    /// <summary>
-    /// Обработка drag ЛКМ по телу фигуры.
-    /// Перемещает PawnView по плоскости Y = 0 и
-    /// сообщает о подсветке/удалении через PawnView + BoardBounds.
-    /// </summary>
     [RequireComponent(typeof(Collider))]
     public sealed class PawnDragHandler : MonoBehaviour
     {
@@ -19,9 +14,6 @@ namespace CrazyPawn
         private bool _isDragging;
         private bool _isOutsideBoard;
 
-        /// <summary>
-        /// Вызывается из GameEntryPoint после спавна фигуры.
-        /// </summary>
         public void Initialize(BoardBounds boardBounds)
         {
             _boardBounds = boardBounds;
@@ -94,7 +86,6 @@ namespace CrazyPawn
                 var hitPoint = ray.GetPoint(enter);
                 var targetPosition = hitPoint + _dragOffset;
 
-                // Все фигуры должны лежать на Y = 0
                 targetPosition.y = 0f;
 
                 _pawnView.transform.position = targetPosition;
@@ -112,17 +103,12 @@ namespace CrazyPawn
 
             UpdateDeleteState();
 
-            // Если при отпускании ЛКМ центр вне доски — запрашиваем удаление фигуры.
             if (_isOutsideBoard)
             {
                 _pawnView?.RequestDelete();
             }
         }
 
-        /// <summary>
-        /// Проверяет положение фигуры относительно BoardBounds
-        /// и включает/выключает режим "удаления".
-        /// </summary>
         private void UpdateDeleteState()
         {
             if (_boardBounds == null || _pawnView == null)

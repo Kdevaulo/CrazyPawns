@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace CrazyPawn
 {
-    /// <summary>
-    /// Доменная сущность "коннектор".
-    /// Хранит ссылку на родительский PawnController и свою вьюшку.
-    /// </summary>
     public sealed class ConnectorController
     {
         private readonly ConnectionManager _connectionManager;

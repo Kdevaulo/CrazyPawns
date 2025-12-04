@@ -2,9 +2,6 @@
 
 namespace CrazyPawn
 {
-    /// <summary>
-    /// Логическая связь между двумя коннекторами + ссылка на вью линии.
-    /// </summary>
     public sealed class ConnectionLine
     {
         private readonly ConnectorController _a;
@@ -21,9 +18,6 @@ namespace CrazyPawn
             _view = view ?? throw new ArgumentNullException(nameof(view));
         }
 
-        /// <summary>
-        /// Обновляет позицию линии по текущим позициям коннекторов.
-        /// </summary>
         public void Tick()
         {
             var aView = _a.View;
@@ -38,9 +32,6 @@ namespace CrazyPawn
             _view.SetPositions(aPos, bPos);
         }
 
-        /// <summary>
-        /// Чистит визуал.
-        /// </summary>
         public void Dispose()
         {
             _view.DestroySelf();
