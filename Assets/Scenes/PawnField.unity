@@ -156,7 +156,7 @@ MonoBehaviour:
     type: 3}
   _settings: {fileID: 11400000, guid: c3b00c709b1f94f22a212add39c80449, type: 2}
   _boardBounds: {fileID: 561077019}
-  _pawnsRoot: {fileID: 561077018}
+  _container: {fileID: 365113527}
   _pawnPrefab: {fileID: 1839143344079602366, guid: 2c0325599477842329501387d1984e5b,
     type: 3}
 --- !u!4 &365113527
